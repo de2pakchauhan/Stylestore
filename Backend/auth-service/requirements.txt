@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+passlib[bcrypt]
+pyjwt
+python-dotenv
+asyncpg
+python-jose[cryptography]
+pydantic[email]
+bcrypt==4.1.2
+

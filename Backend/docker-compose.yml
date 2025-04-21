@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  db-service:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+    depends_on:
+      - db-service
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@db-service/auth_db
+      SECRET_KEY: mysecretkey
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  orders-service:
+    build:
+      context: ./orders-service
+    depends_on:
+      - db-service
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@db-service/orders_db
+    ports:
+      - "8001:8000"
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db-service
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  app-network:
+    driver: bridge
